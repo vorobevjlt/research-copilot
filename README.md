@@ -24,6 +24,10 @@ endpoint is `http://localhost:11434/v1`; set `OLLAMA_BASE_URL` and, if needed,
 `OLLAMA_API_KEY` to override it. Keep the existing Clerk and Supabase variables
 in `.env` as well. Do not commit that file.
 
+Apply the Supabase migrations before opening the project picker. The migration
+in `lib/supabase/migrations` creates the user-owned project contexts used by
+the chat flow.
+
 ## Deploy on Vercel
 
 No `vercel.json` file is needed: Vercel detects this Next.js application and

@@ -14,7 +14,7 @@ export default function HomePage() {
           Start a conversation with your AI assistant whenever you are ready.
         </p>
         <Link
-          href="/dashboard/chat"
+          href="/dashboard/projects"
           className="mt-8 inline-flex h-12 items-center justify-center rounded-full bg-zinc-950 px-6 font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950"
         >
           Open chat

@@ -82,6 +82,36 @@ cpk-web-inspector {
   color: #6f6f6f;
 }
 
+.chat-project-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.chat-project-title small {
+  margin-top: 0.2rem;
+  color: #666666;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.header-actions {
+  gap: 0.875rem;
+}
+
+.change-project-link {
+  color: #525252;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.change-project-link:hover {
+  color: #111111;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
 .header-avatar {
   width: 1.875rem;
   height: 1.875rem;
@@ -174,6 +204,335 @@ cpk-web-inspector {
   color: #777777;
 }
 
+.projects-page {
+  min-height: 100dvh;
+  background: #c2c2c2;
+  padding: 1.25rem;
+}
+
+.projects-shell {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+}
+
+.projects-header {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.projects-brand {
+  color: #171717;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.projects-intro {
+  max-width: 42rem;
+  padding: 4.5rem 0 2.5rem;
+}
+
+.project-kicker {
+  margin: 0 0 0.75rem;
+  color: #5d5d5d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.projects-intro h1 {
+  margin: 0;
+  color: #171717;
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.projects-intro > p:last-child {
+  max-width: 35rem;
+  margin: 1.25rem 0 0;
+  color: #555555;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.projects-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.projects-list,
+.project-form {
+  border: 1px solid #737373;
+  border-radius: 1.5rem;
+  background: rgb(255 255 255 / 0.16);
+}
+
+.projects-list {
+  min-height: 28rem;
+  padding: 1.5rem;
+}
+
+.projects-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.projects-list-heading h2,
+.project-form h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.projects-list-heading > span {
+  display: grid;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border: 1px solid #868686;
+  border-radius: 999px;
+  color: #555555;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.project-cards {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.project-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #919191;
+  border-radius: 1rem;
+  padding: 1.1rem 1.2rem;
+  color: #171717;
+  text-decoration: none;
+  transition: border-color 150ms ease, background 150ms ease,
+    transform 150ms ease;
+}
+
+.project-card:hover {
+  border-color: #171717;
+  background: rgb(255 255 255 / 0.2);
+  transform: translateY(-1px);
+}
+
+.project-card > div {
+  min-width: 0;
+}
+
+.project-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.project-card p {
+  display: -webkit-box;
+  margin: 0.45rem 0 0;
+  overflow: hidden;
+  color: #5d5d5d;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-card > span {
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+}
+
+.projects-first {
+  min-height: calc(100dvh - 5.5rem);
+}
+
+.projects-first-empty {
+  display: grid;
+  min-height: calc(100dvh - 5.5rem);
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
+  padding: 2rem 1rem 3rem;
+  text-align: center;
+}
+
+.projects-first-empty > div {
+  grid-row: 2;
+  align-self: center;
+}
+
+.projects-first-empty h1 {
+  margin: 0;
+  color: #171717;
+  font-size: clamp(2rem, 5vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.projects-first-empty > div > p:last-child {
+  max-width: 28rem;
+  margin: 1rem auto 0;
+  color: #666666;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.projects-empty-action {
+  display: inline-flex;
+  grid-row: 3;
+  align-self: end;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 1.4rem;
+  background: #171717;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.projects-empty-action:hover {
+  background: #343434;
+}
+
+.projects-empty-action > span {
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.projects-first-form {
+  width: min(100%, 30rem);
+  margin: 0 auto;
+  padding: 4.5rem 0 2rem;
+}
+
+.projects-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+  border: 0;
+  padding: 0.5rem 0;
+  background: transparent;
+  color: #343434;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.projects-back-button:hover {
+  color: #000000;
+}
+
+.project-form {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.5rem;
+}
+
+.project-form-copy {
+  margin: 0.75rem 0 0;
+  color: #5c5c5c;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.project-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.project-field > span {
+  color: #303030;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.project-field input,
+.project-field textarea {
+  width: 100%;
+  border: 1px solid #858585;
+  border-radius: 0.85rem;
+  background: rgb(255 255 255 / 0.16);
+  color: #1d1d1d;
+  font: inherit;
+  outline: none;
+}
+
+.project-field input {
+  height: 2.75rem;
+  padding: 0 0.85rem;
+}
+
+.project-field textarea {
+  min-height: 9.5rem;
+  padding: 0.8rem 0.85rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.project-field input:focus,
+.project-field textarea:focus {
+  border-color: #171717;
+  box-shadow: 0 0 0 2px rgb(23 23 23 / 0.1);
+}
+
+.project-field input::placeholder,
+.project-field textarea::placeholder {
+  color: #707070;
+}
+
+.project-form-error {
+  min-height: 1.1rem;
+  margin: -0.35rem 0;
+  color: #8b1d1d;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.project-create-button {
+  min-height: 2.875rem;
+  border: 0;
+  border-radius: 999px;
+  background: #171717;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.project-create-button:hover:not(:disabled) {
+  background: #343434;
+}
+
+.project-create-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 @media (max-width: 767px) {
   .chat-app {
     min-height: 30rem;
@@ -182,6 +541,15 @@ cpk-web-inspector {
   .chat-header {
     height: 3.5rem;
     padding: 0 1rem;
+  }
+
+  .change-project-link {
+    font-size: 0;
+  }
+
+  .change-project-link::after {
+    content: "Projects";
+    font-size: 0.75rem;
   }
 
   .mobile-mark {
@@ -198,5 +566,65 @@ cpk-web-inspector {
 
   .chat-surface [data-testid="copilot-welcome-screen"] {
     padding: 1rem 1rem 2rem;
+  }
+
+  /* Keep CopilotKit's composer in its desktop row when the viewport narrows. */
+  .chat-surface
+    [data-testid="copilot-chat-input"]
+    > [data-layout="expanded"] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto;
+    align-items: center;
+  }
+
+  .chat-surface
+    [data-testid="copilot-chat-input"]
+    > [data-layout="expanded"]
+    > :nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .chat-surface
+    [data-testid="copilot-chat-input"]
+    > [data-layout="expanded"]
+    > :nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .chat-surface
+    [data-testid="copilot-chat-input"]
+    > [data-layout="expanded"]
+    > :nth-child(3) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .chat-surface
+    [data-testid="copilot-chat-input"][data-layout="expanded"]
+    [data-testid="copilot-chat-textarea"] {
+    padding-right: 1.25rem;
+    padding-left: 0;
+  }
+
+  .projects-page {
+    padding: 1rem;
+  }
+
+  .projects-intro {
+    padding: 3rem 0 2rem;
+  }
+
+  .projects-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .projects-list {
+    min-height: 0;
+  }
+
+  .projects-layout aside {
+    grid-row: 1;
   }
 }
