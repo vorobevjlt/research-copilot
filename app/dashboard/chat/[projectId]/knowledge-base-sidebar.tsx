@@ -71,9 +71,20 @@ async function readApi<T>(response: Response, fallback: string): Promise<T> {
     | ApiEnvelope<T>
     | { detail?: string }
     | null;
+
   if (!response.ok) throw new Error(apiMessage(payload, fallback));
   if (!payload || !("data" in payload)) throw new Error(fallback);
   return payload.data;
+}
+
+async function fetchWithSessionRetry(input: RequestInfo | URL) {
+  const request = () =>
+    fetch(input, { cache: "no-store", credentials: "same-origin" });
+  const response = await request();
+  if (response.status !== 401) return response;
+
+  await new Promise((resolve) => window.setTimeout(resolve, 250));
+  return request();
 }
 
 function formatBytes(bytes: number) {
@@ -159,7 +170,7 @@ export function KnowledgeBaseSidebar({
   const basePath = `/api/projects/${encodeURIComponent(projectId)}/knowledge`;
 
   const loadDocuments = useCallback(async () => {
-    const response = await fetch(basePath, { cache: "no-store" });
+    const response = await fetchWithSessionRetry(basePath);
     const data = await readApi<ProjectDocument[]>(
       response,
       "Unable to load project documents.",
@@ -168,7 +179,7 @@ export function KnowledgeBaseSidebar({
   }, [basePath]);
 
   const loadSettings = useCallback(async () => {
-    const response = await fetch(`${basePath}/settings`, { cache: "no-store" });
+    const response = await fetchWithSessionRetry(`${basePath}/settings`);
     const data = await readApi<ProjectSettings>(
       response,
       "Unable to load knowledge settings.",

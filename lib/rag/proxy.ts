@@ -12,7 +12,11 @@ export class RagProxyError extends Error {
   }
 }
 export async function requireProjectAccess(projectId: string) {
-  const session = await auth.protect();
+  const session = await auth();
+  if (!session.userId) {
+    throw new RagProxyError("User is not signed in.", 401);
+  }
+
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("projects")
