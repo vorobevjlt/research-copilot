@@ -1,7 +1,7 @@
 # AI Assistant
 
-Next.js chat application with Clerk authentication, Supabase user syncing, and
-CopilotKit.
+Next.js project assistant with Clerk authentication, Supabase persistence,
+CopilotKit/AG-UI chat, and a project-isolated RAG knowledge base.
 
 ## Run locally
 
@@ -12,21 +12,19 @@ npm install
 npm run dev
 ```
 
-The application uses a local Ollama model by default. Start Ollama locally and
-pull the model before chatting:
+Set `RAG_SERVER_URL` in `.env` to the FastAPI service, for example
+`http://localhost:8000`. The browser talks only to authenticated same-origin
+Next.js routes; those routes verify the Clerk user owns the project before
+forwarding requests to the RAG service.
 
-```bash
-ollama pull llama3.1:8b
-```
+Apply the authoritative migrations from the companion
+`rag_server/supabase/migrations` directory. Its latest migration converges the
+older project column names used by the RAG schema, then adds project settings,
+documents, chunks, vector/keyword retrieval functions, and persisted chats.
 
-To use a different local model, set `OLLAMA_MODEL` in `.env`. The default Ollama
-endpoint is `http://localhost:11434/v1`; set `OLLAMA_BASE_URL` and, if needed,
-`OLLAMA_API_KEY` to override it. Keep the existing Clerk and Supabase variables
-in `.env` as well. Do not commit that file.
-
-Apply the Supabase migrations before opening the project picker. The migration
-in `lib/supabase/migrations` creates the user-owned project contexts used by
-the chat flow.
+File uploads use presigned S3-compatible URLs. The storage bucket must allow
+browser `PUT` requests from the application origin while remaining private for
+reads and listing.
 
 ## Deploy on Vercel
 
@@ -44,9 +42,7 @@ builds it with `npm run build`.
    NEXT_PUBLIC_SUPABASE_URL
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
    SUPABASE_SERVICE_ROLE_KEY
-   OLLAMA_BASE_URL               # required for deployed chat; must not be localhost
-   OLLAMA_API_KEY                # optional, if your Ollama endpoint requires it
-   OLLAMA_MODEL                  # optional; defaults to llama3.1:8b
+   RAG_SERVER_URL                # public URL of the remote FastAPI service
    ```
 
 3. Deploy the project. For a production deployment, use your production Clerk
@@ -60,6 +56,5 @@ Vercel preview deployments can use development Clerk keys. Configure a separate
 production webhook with the exact production URL; ngrok is only needed when
 testing webhooks against a local development server.
 
-> Vercel cannot reach Ollama running on your development machine. To use chat in
-> a Vercel deployment, point `OLLAMA_BASE_URL` to an Ollama server reachable by
-> Vercel. Otherwise, run the application locally with the default endpoint.
+> `RAG_SERVER_URL` must be reachable from the deployed Next.js server. It is not
+> exposed to browser code.

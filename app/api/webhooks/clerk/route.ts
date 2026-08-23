@@ -13,11 +13,6 @@ export async function POST(request: NextRequest) {
     const event = await verifyWebhook(request);
 
     if (event.type === "user.created") {
-      const email =
-        event.data.email_addresses.find(
-          (item) => item.id === event.data.primary_email_address_id,
-        )?.email_address ?? null;
-
       const { error } = await supabase.from("users").upsert(
         { clerk_id: event.data.id },
         { onConflict: "clerk_id" },

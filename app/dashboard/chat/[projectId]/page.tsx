@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -54,7 +55,7 @@ export default async function ProjectChatPage({ params }: ChatPageProps) {
             <Link className="change-project-link" href="/dashboard/projects">
               Change project
             </Link>
-            <span className="header-avatar">Y</span>
+            <UserButton />
           </div>
         </header>
 

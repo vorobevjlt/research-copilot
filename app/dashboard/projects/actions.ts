@@ -10,6 +10,21 @@ export type CreateProjectState = {
 
 const MAX_NAME_LENGTH = 80;
 const MAX_CONTEXT_LENGTH = 8_000;
+const DEFAULT_PROJECT_SETTINGS = {
+  embedding_model: "text-embedding-3-large",
+  rag_strategy: "hybrid",
+  agent_type: "simple",
+  chunks_per_search: 20,
+  final_context_size: 6,
+  similarity_threshold: 0.3,
+  number_of_queries: 3,
+  reranking_enabled: false,
+  reranking_model: "rerank-english-v3.0",
+  vector_weight: 0.7,
+  keyword_weight: 0.3,
+  rag_enabled: true,
+  answer_mode: "combined",
+} as const;
 
 export async function createProject(
   _previousState: CreateProjectState,
@@ -67,6 +82,41 @@ export async function createProject(
       hint: error?.hint,
     });
     return { error: "The project could not be created. Please try again." };
+  }
+
+  const { error: settingsError } = await supabase
+    .from("project_settings")
+    .upsert(
+      { project_id: data.id, ...DEFAULT_PROJECT_SETTINGS },
+      { onConflict: "project_id" },
+    );
+
+  if (settingsError) {
+    console.error("Failed to create default project settings", {
+      projectId: data.id,
+      code: settingsError.code,
+      message: settingsError.message,
+      details: settingsError.details,
+      hint: settingsError.hint,
+    });
+
+    const { error: rollbackError } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", data.id)
+      .eq("owner_clerk_id", userId);
+
+    if (rollbackError) {
+      console.error("Failed to roll back project without settings", {
+        projectId: data.id,
+        code: rollbackError.code,
+        message: rollbackError.message,
+        details: rollbackError.details,
+        hint: rollbackError.hint,
+      });
+    }
+
+    return { error: "The project could not be prepared. Please try again." };
   }
 
   redirect(`/dashboard/chat/${data.id}`);

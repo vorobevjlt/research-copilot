@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { CreateProjectForm } from "./create-project-form";
@@ -38,7 +39,7 @@ export default async function ProjectsPage() {
           <Link className="projects-brand" href="/">
             AI Assistant
           </Link>
-          <span className="header-avatar">Y</span>
+          <UserButton />
         </header>
 
         {projects.length === 0 ? (

@@ -1,3 +1,4 @@
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -13,12 +14,30 @@ export default function HomePage() {
         <p className="mt-5 max-w-md text-lg leading-8 text-zinc-600">
           Start a conversation with your AI assistant whenever you are ready.
         </p>
-        <Link
-          href="/dashboard/projects"
-          className="mt-8 inline-flex h-12 items-center justify-center rounded-full bg-zinc-950 px-6 font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950"
-        >
-          Open chat
-        </Link>
+        <div className="mt-8 flex items-center gap-4">
+          <Show when="signed-out">
+            <SignInButton
+              mode="modal"
+              forceRedirectUrl="/dashboard/projects"
+            >
+              <button
+                type="button"
+                className="inline-flex h-12 cursor-pointer items-center justify-center rounded-full bg-zinc-950 px-6 font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950"
+              >
+                Open chat
+              </button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <Link
+              href="/dashboard/projects"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-zinc-950 px-6 font-medium text-white transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950"
+            >
+              Open chat
+            </Link>
+            <UserButton />
+          </Show>
+        </div>
       </section>
     </main>
   );
