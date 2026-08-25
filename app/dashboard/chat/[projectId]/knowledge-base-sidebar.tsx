@@ -1,5 +1,6 @@
 "use client";
 
+import { getToken } from "@clerk/nextjs";
 import {
   DOCUMENT_ACCEPT,
   MAX_DOCUMENT_SIZE,
@@ -77,14 +78,28 @@ async function readApi<T>(response: Response, fallback: string): Promise<T> {
   return payload.data;
 }
 
-async function fetchWithSessionRetry(input: RequestInfo | URL) {
-  const request = () =>
-    fetch(input, { cache: "no-store", credentials: "same-origin" });
+async function authenticatedFetch(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+) {
+  const request = async (skipCache = false) => {
+    const token = await getToken({ skipCache });
+    if (!token) throw new Error("User is not signed in.");
+
+    const headers = new Headers(init.headers);
+    headers.set("authorization", `Bearer ${token}`);
+
+    return fetch(input, {
+      ...init,
+      headers,
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+  };
+
   const response = await request();
   if (response.status !== 401) return response;
-
-  await new Promise((resolve) => window.setTimeout(resolve, 250));
-  return request();
+  return request(true);
 }
 
 function formatBytes(bytes: number) {
@@ -170,7 +185,7 @@ export function KnowledgeBaseSidebar({
   const basePath = `/api/projects/${encodeURIComponent(projectId)}/knowledge`;
 
   const loadDocuments = useCallback(async () => {
-    const response = await fetchWithSessionRetry(basePath);
+    const response = await authenticatedFetch(basePath);
     const data = await readApi<ProjectDocument[]>(
       response,
       "Unable to load project documents.",
@@ -179,7 +194,7 @@ export function KnowledgeBaseSidebar({
   }, [basePath]);
 
   const loadSettings = useCallback(async () => {
-    const response = await fetchWithSessionRetry(`${basePath}/settings`);
+    const response = await authenticatedFetch(`${basePath}/settings`);
     const data = await readApi<ProjectSettings>(
       response,
       "Unable to load knowledge settings.",
@@ -264,7 +279,7 @@ export function KnowledgeBaseSidebar({
           ]);
 
           try {
-            const signResponse = await fetch(`${basePath}/upload-url`, {
+            const signResponse = await authenticatedFetch(`${basePath}/upload-url`, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({
@@ -305,7 +320,7 @@ export function KnowledgeBaseSidebar({
               ),
             );
 
-            const confirmResponse = await fetch(`${basePath}/confirm`, {
+            const confirmResponse = await authenticatedFetch(`${basePath}/confirm`, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ document_id: signed.document_id }),
@@ -320,7 +335,7 @@ export function KnowledgeBaseSidebar({
             await loadDocuments();
           } catch (uploadError) {
             if (documentId && !stored) {
-              await fetch(
+              await authenticatedFetch(
                 `${basePath}/documents/${encodeURIComponent(documentId)}`,
                 { method: "DELETE" },
               ).catch(() => undefined);
@@ -362,7 +377,7 @@ export function KnowledgeBaseSidebar({
   async function removeDocument(document: ProjectDocument) {
     if (!window.confirm(`Remove ${document.filename} from this project?`)) return;
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `${basePath}/documents/${encodeURIComponent(document.id)}`,
         { method: "DELETE" },
       );
@@ -385,7 +400,7 @@ export function KnowledgeBaseSidebar({
   async function retryDocument(document: ProjectDocument) {
     setError("");
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `${basePath}/documents/${encodeURIComponent(document.id)}/retry`,
         { method: "POST" },
       );
@@ -405,7 +420,7 @@ export function KnowledgeBaseSidebar({
     setSaving(true);
     setError("");
     try {
-      const response = await fetch(`${basePath}/settings`, {
+      const response = await authenticatedFetch(`${basePath}/settings`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(settings),
