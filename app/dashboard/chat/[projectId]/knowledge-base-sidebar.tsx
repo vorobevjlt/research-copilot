@@ -1,6 +1,6 @@
 "use client";
 
-import { getToken } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import {
   DOCUMENT_ACCEPT,
   MAX_DOCUMENT_SIZE,
@@ -78,28 +78,15 @@ async function readApi<T>(response: Response, fallback: string): Promise<T> {
   return payload.data;
 }
 
-async function authenticatedFetch(
+async function sameOriginFetch(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ) {
-  const request = async (skipCache = false) => {
-    const token = await getToken({ skipCache });
-    if (!token) throw new Error("User is not signed in.");
-
-    const headers = new Headers(init.headers);
-    headers.set("authorization", `Bearer ${token}`);
-
-    return fetch(input, {
-      ...init,
-      headers,
-      cache: "no-store",
-      credentials: "same-origin",
-    });
-  };
-
-  const response = await request();
-  if (response.status !== 401) return response;
-  return request(true);
+  return fetch(input, {
+    ...init,
+    cache: "no-store",
+    credentials: "same-origin",
+  });
 }
 
 function formatBytes(bytes: number) {
@@ -172,6 +159,7 @@ export function KnowledgeBaseSidebar({
   onClose,
   citations,
 }: KnowledgeBaseSidebarProps) {
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const [tab, setTab] = useState<SidebarTab>("sources");
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
   const [settings, setSettings] = useState<ProjectSettings | null>(null);
@@ -185,7 +173,7 @@ export function KnowledgeBaseSidebar({
   const basePath = `/api/projects/${encodeURIComponent(projectId)}/knowledge`;
 
   const loadDocuments = useCallback(async () => {
-    const response = await authenticatedFetch(basePath);
+    const response = await sameOriginFetch(basePath);
     const data = await readApi<ProjectDocument[]>(
       response,
       "Unable to load project documents.",
@@ -194,7 +182,7 @@ export function KnowledgeBaseSidebar({
   }, [basePath]);
 
   const loadSettings = useCallback(async () => {
-    const response = await authenticatedFetch(`${basePath}/settings`);
+    const response = await sameOriginFetch(`${basePath}/settings`);
     const data = await readApi<ProjectSettings>(
       response,
       "Unable to load knowledge settings.",
@@ -203,6 +191,17 @@ export function KnowledgeBaseSidebar({
   }, [basePath]);
 
   useEffect(() => {
+    if (!isAuthLoaded) {
+      setLoading(true);
+      return;
+    }
+
+    if (!isSignedIn) {
+      setLoading(false);
+      setError("User is not signed in.");
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setError("");
@@ -222,19 +221,19 @@ export function KnowledgeBaseSidebar({
     return () => {
       cancelled = true;
     };
-  }, [loadDocuments, loadSettings]);
+  }, [isAuthLoaded, isSignedIn, loadDocuments, loadSettings]);
 
   const hasActiveDocuments = documents.some((document) =>
     activeStatuses.has(document.processing_status),
   );
 
   useEffect(() => {
-    if (!hasActiveDocuments) return;
+    if (!isAuthLoaded || !isSignedIn || !hasActiveDocuments) return;
     const interval = window.setInterval(() => {
       loadDocuments().catch(() => undefined);
     }, 2500);
     return () => window.clearInterval(interval);
-  }, [hasActiveDocuments, loadDocuments]);
+  }, [hasActiveDocuments, isAuthLoaded, isSignedIn, loadDocuments]);
 
   const sortedDocuments = useMemo(
     () =>
@@ -279,7 +278,7 @@ export function KnowledgeBaseSidebar({
           ]);
 
           try {
-            const signResponse = await authenticatedFetch(`${basePath}/upload-url`, {
+            const signResponse = await sameOriginFetch(`${basePath}/upload-url`, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({
@@ -320,7 +319,7 @@ export function KnowledgeBaseSidebar({
               ),
             );
 
-            const confirmResponse = await authenticatedFetch(`${basePath}/confirm`, {
+            const confirmResponse = await sameOriginFetch(`${basePath}/confirm`, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ document_id: signed.document_id }),
@@ -335,7 +334,7 @@ export function KnowledgeBaseSidebar({
             await loadDocuments();
           } catch (uploadError) {
             if (documentId && !stored) {
-              await authenticatedFetch(
+              await sameOriginFetch(
                 `${basePath}/documents/${encodeURIComponent(documentId)}`,
                 { method: "DELETE" },
               ).catch(() => undefined);
@@ -377,7 +376,7 @@ export function KnowledgeBaseSidebar({
   async function removeDocument(document: ProjectDocument) {
     if (!window.confirm(`Remove ${document.filename} from this project?`)) return;
     try {
-      const response = await authenticatedFetch(
+      const response = await sameOriginFetch(
         `${basePath}/documents/${encodeURIComponent(document.id)}`,
         { method: "DELETE" },
       );
@@ -400,7 +399,7 @@ export function KnowledgeBaseSidebar({
   async function retryDocument(document: ProjectDocument) {
     setError("");
     try {
-      const response = await authenticatedFetch(
+      const response = await sameOriginFetch(
         `${basePath}/documents/${encodeURIComponent(document.id)}/retry`,
         { method: "POST" },
       );
@@ -420,7 +419,7 @@ export function KnowledgeBaseSidebar({
     setSaving(true);
     setError("");
     try {
-      const response = await authenticatedFetch(`${basePath}/settings`, {
+      const response = await sameOriginFetch(`${basePath}/settings`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(settings),
