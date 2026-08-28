@@ -187,7 +187,11 @@ export function KnowledgeBaseSidebar({
       response,
       "Unable to load knowledge settings.",
     );
-    setSettings(data);
+    setSettings({
+      ...data,
+      rag_enabled: true,
+      answer_mode: "knowledge_only",
+    });
   }, [basePath]);
 
   useEffect(() => {
@@ -419,16 +423,25 @@ export function KnowledgeBaseSidebar({
     setSaving(true);
     setError("");
     try {
+      const projectOnlySettings: ProjectSettings = {
+        ...settings,
+        rag_enabled: true,
+        answer_mode: "knowledge_only",
+      };
       const response = await sameOriginFetch(`${basePath}/settings`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(projectOnlySettings),
       });
       const updated = await readApi<ProjectSettings>(
         response,
         "Unable to save knowledge settings.",
       );
-      setSettings(updated);
+      setSettings({
+        ...updated,
+        rag_enabled: true,
+        answer_mode: "knowledge_only",
+      });
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -657,71 +670,95 @@ export function KnowledgeBaseSidebar({
               <p className="knowledge-empty">Loading settings…</p>
             ) : (
               <>
-                <label className="knowledge-toggle-row">
-                  <div>
-                    <strong>Use project knowledge</strong>
-                    <small>Search uploaded sources when answering in this project.</small>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.rag_enabled}
-                    onChange={(event) =>
-                      setSettings((current) =>
-                        current
-                          ? { ...current, rag_enabled: event.target.checked }
-                          : current,
-                      )
-                    }
-                  />
-                </label>
-
                 <fieldset>
-                  <legend>Answer mode</legend>
+                  <legend>Agent</legend>
                   <label className="knowledge-radio-row">
                     <input
                       type="radio"
-                      name="answer-mode"
-                      value="combined"
-                      checked={settings.answer_mode === "combined"}
+                      name="agent-type"
+                      value="simple"
+                      checked={settings.agent_type === "simple"}
                       onChange={() =>
                         setSettings((current) =>
-                          current ? { ...current, answer_mode: "combined" } : current,
+                          current ? { ...current, agent_type: "simple" } : current,
                         )
                       }
                     />
                     <div>
-                      <strong>Combined knowledge</strong>
+                      <strong>Simple agent</strong>
                       <small>
-                        Use project sources first, then general model knowledge when helpful.
+                        Runs a direct search and answers from the most relevant project sources.
                       </small>
                     </div>
                   </label>
                   <label className="knowledge-radio-row">
                     <input
                       type="radio"
-                      name="answer-mode"
-                      value="knowledge_only"
-                      checked={settings.answer_mode === "knowledge_only"}
+                      name="agent-type"
+                      value="agentic"
+                      checked={settings.agent_type === "agentic"}
+                      onChange={() =>
+                        setSettings((current) =>
+                          current ? { ...current, agent_type: "agentic" } : current,
+                        )
+                      }
+                    />
+                    <div>
+                      <strong>Supervisor agent</strong>
+                      <small>
+                        Coordinates a more thorough, multi-step search across project sources.
+                      </small>
+                    </div>
+                  </label>
+                </fieldset>
+
+                <fieldset>
+                  <legend>Search strategy</legend>
+                  <label className="knowledge-radio-row">
+                    <input
+                      type="radio"
+                      name="rag-strategy"
+                      value="hybrid"
+                      checked={settings.rag_strategy === "hybrid"}
+                      onChange={() =>
+                        setSettings((current) =>
+                          current ? { ...current, rag_strategy: "hybrid" } : current,
+                        )
+                      }
+                    />
+                    <div>
+                      <strong>Hybrid search</strong>
+                      <small>
+                        Combines semantic similarity with exact keyword matching.
+                      </small>
+                    </div>
+                  </label>
+                  <label className="knowledge-radio-row">
+                    <input
+                      type="radio"
+                      name="rag-strategy"
+                      value="multi-query-hybrid"
+                      checked={settings.rag_strategy === "multi-query-hybrid"}
                       onChange={() =>
                         setSettings((current) =>
                           current
-                            ? { ...current, answer_mode: "knowledge_only" }
+                            ? { ...current, rag_strategy: "multi-query-hybrid" }
                             : current,
                         )
                       }
                     />
                     <div>
-                      <strong>Sources only</strong>
+                      <strong>Multi-query hybrid search</strong>
                       <small>
-                        Answer only from this project’s uploaded knowledge and say when it is insufficient.
+                        Tries several query variations, then combines semantic and keyword results.
                       </small>
                     </div>
                   </label>
                 </fieldset>
 
                 <div className="knowledge-settings-note">
-                  Retrieval tuning remains server-managed for consistent quality. These
-                  project settings are stored in Supabase.
+                  Answers stay inside this project’s context and uploaded sources. If
+                  the available information is insufficient, the agent will say so.
                 </div>
 
                 <button

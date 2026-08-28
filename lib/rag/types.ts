@@ -4,6 +4,8 @@ export const DOCUMENT_ACCEPT =
 export const MAX_DOCUMENT_SIZE = 50 * 1024 * 1024;
 
 export type AnswerMode = "combined" | "knowledge_only";
+export type AgentType = "simple" | "agentic";
+export type RagStrategy = "hybrid" | "multi-query-hybrid";
 
 export type ProjectDocument = {
   id: string;
@@ -23,8 +25,8 @@ export type ProjectSettings = {
   id: string;
   project_id: string;
   embedding_model: string;
-  rag_strategy: string;
-  agent_type: string;
+  rag_strategy: RagStrategy;
+  agent_type: AgentType;
   chunks_per_search: number;
   final_context_size: number;
   similarity_threshold: number;

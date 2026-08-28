@@ -23,7 +23,7 @@ const DEFAULT_PROJECT_SETTINGS = {
   vector_weight: 0.7,
   keyword_weight: 0.3,
   rag_enabled: true,
-  answer_mode: "combined",
+  answer_mode: "knowledge_only",
 } as const;
 
 export async function createProject(

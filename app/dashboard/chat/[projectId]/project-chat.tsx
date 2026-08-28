@@ -55,7 +55,7 @@ function ProjectChatExperience({ project }: ProjectChatProps) {
 
   useAgentContext({
     description:
-      "The active project. Treat this context as authoritative background and keep answers scoped to it unless the user asks otherwise.",
+      "The active project and the only allowed knowledge context. Answer exclusively from this project context and its retrieved sources. Never add facts from general model knowledge or external sources. If the project does not contain enough information, say so clearly.",
     value: projectContext,
   });
 
@@ -113,6 +113,7 @@ function ProjectChatExperience({ project }: ProjectChatProps) {
           className="chat-surface"
           threadId={project.id}
           autoScroll="pin-to-send"
+          scrollView={{ className: "chat-scroll-region" }}
           throttleMs={0}
           labels={{
             welcomeMessageText: `What would you like to work on in ${project.name}?`,
