@@ -82,7 +82,7 @@ XTTS-v2 supports voice cloning in the languages offered by the Voice Studio
 selector. It does not support free-form delivery instructions, so that OpenAI
 specific field is intentionally absent.
 
-### Run XTTS-v2 locally with Docker
+### Run XTTS-v2
 
 XTTS-v2 model weights use the non-commercial Coqui Public Model License. Review
 that license before running the service. This integration is therefore suitable
@@ -107,10 +107,11 @@ VOICE_CLONE_SIGNING_SECRET=replace-with-a-different-long-random-value
 
 The first startup downloads and loads the XTTS-v2 model. Model and voice data
 live in named Docker volumes so container rebuilds do not discard them. The CPU
-image works without special hardware but synthesis can be slow. For a remote
-deployment, run this Python service on persistent GPU infrastructure, expose it
-over HTTPS, and set `XTTS_SERVICE_URL` in Vercel to that private or protected
-URL. The model cannot run inside a Vercel Function.
+image works without special hardware but synthesis can be slow. The included
+Caddy service provides HTTPS for the configured VPS hostname; set
+`XTTS_SERVICE_URL=https://xtts.161.104.50.218.sslip.io` in Vercel. The model
+cannot run inside a Vercel Function, and Docker is not required on the machine
+running the Next.js client.
 
 The service exposes unauthenticated `GET /health`; all voice creation,
 generation, and deletion endpoints require `XTTS_SERVICE_API_KEY` as a bearer
