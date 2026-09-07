@@ -21,6 +21,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { SongVoiceConverter } from "./song-voice-converter";
 
 type SavedVoice = {
   name: string;
@@ -28,6 +29,7 @@ type SavedVoice = {
 };
 
 type AudioField = "consent" | "sample";
+type VoiceMode = "speech" | "song";
 
 const STORAGE_KEY = "research-copilot.voice-clone.xtts-v2";
 const WAVEFORM_HEIGHTS = Array.from(
@@ -119,6 +121,8 @@ function selectedFileLabel(file: File, duration?: number) {
 export function VoiceCloneStudio() {
   const { locale, dictionary } = useAppLocale();
   const copy = dictionary.voice;
+  const [mode, setMode] = useState<VoiceMode>("speech");
+  const [songPending, setSongPending] = useState(false);
   const [savedVoice, setSavedVoice] = useState<SavedVoice | null>(null);
   const [useSavedVoice, setUseSavedVoice] = useState(false);
   const [voiceName, setVoiceName] = useState("");
@@ -336,7 +340,44 @@ export function VoiceCloneStudio() {
   const activeName = useSavedVoice ? savedVoice?.name ?? copy.savedVoice : voiceName;
 
   return (
-    <form className="voice-studio" noValidate onSubmit={submit}>
+    <div className="voice-workspace">
+      <div
+        className="voice-workspace-tabs"
+        role="tablist"
+        aria-label={dictionary.voicePage.title}
+      >
+        <button
+          id="voice-speech-tab"
+          type="button"
+          role="tab"
+          aria-selected={mode === "speech"}
+          aria-controls="voice-speech-panel"
+          disabled={songPending}
+          onClick={() => setMode("speech")}
+        >
+          {copy.speechTab}
+        </button>
+        <button
+          id="voice-song-tab"
+          type="button"
+          role="tab"
+          aria-selected={mode === "song"}
+          aria-controls="voice-song-panel"
+          onClick={() => setMode("song")}
+        >
+          {copy.songTab}
+        </button>
+      </div>
+
+      {mode === "speech" ? (
+        <form
+          className="voice-studio"
+          id="voice-speech-panel"
+          role="tabpanel"
+          aria-labelledby="voice-speech-tab"
+          noValidate
+          onSubmit={submit}
+        >
       <div className="voice-builder">
         <div className="voice-section-heading">
           <div>
@@ -605,6 +646,23 @@ export function VoiceCloneStudio() {
           <p>{copy.privacy}</p>
         </div>
       </aside>
-    </form>
+        </form>
+      ) : (
+        <div
+          id="voice-song-panel"
+          role="tabpanel"
+          aria-labelledby="voice-song-tab"
+        >
+          <SongVoiceConverter
+            savedVoice={savedVoice}
+            onPendingChange={setSongPending}
+            onCreateVoice={() => {
+              setMode("speech");
+              setUseSavedVoice(false);
+            }}
+          />
+        </div>
+      )}
+    </div>
   );
 }

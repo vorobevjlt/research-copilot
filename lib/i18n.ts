@@ -153,9 +153,11 @@ const english = {
     kicker: "Consent-first audio",
     title: "Voice Studio",
     description:
-      "Create a reusable XTTS-v2 voice from an authorized sample, then turn your text into downloadable speech. Results are a close likeness; exact reproduction can vary with recording quality.",
+      "Create a reusable voice from an authorized sample, generate speech, or replace a song's lead vocal while preserving its timing and melody.",
   },
   voice: {
+    speechTab: "Text to speech",
+    songTab: "Replace song voice",
     unableGenerate: "Unable to generate the audio. Please try again.",
     browserReadError: "The browser could not read this audio file.",
     invalidFile:
@@ -219,6 +221,44 @@ const english = {
       "Add authorized recordings and a script. You can listen before downloading the generated WAV file.",
     privacy:
       "XTTS-v2 runs in your configured voice service. It stores the normalized voice sample for reuse; the consent recording is not retained. Forgetting a voice removes its sample from the service.",
+    songIdentity: "Song voice",
+    songTitle: "Replace the lead vocal",
+    songDescription:
+      "The service separates the lead vocal, converts it to your saved voice, and remixes it with the original accompaniment.",
+    songFile: "Song file",
+    songFileHelp: "MPEG, WAV, OGG, AAC, FLAC, WebM, or MP4 · up to 50 MiB and 5 minutes",
+    songFileRequirement: "song file",
+    songConsentRequirement: "song and voice authorization",
+    songConsent:
+      "I confirm I have the right to process this song and that the saved voice owner authorized this use.",
+    noSongVoice: "Create and save an authorized voice before converting a song.",
+    createVoiceFirst: "Create a voice first",
+    songReady: "Everything is ready for song conversion.",
+    replaceSongVoice: "Replace song voice",
+    preparingSong: "Preparing secure upload…",
+    uploadingSong: "Uploading song…",
+    queuedSong: "Waiting for the converter…",
+    preparingAudio: "Preparing the audio…",
+    separatingVocals: "Separating vocals from the accompaniment…",
+    convertingVocal: "Converting the singing voice…",
+    remixingSong: "Remixing the converted vocal with the song…",
+    finishingSong: "Finishing the song…",
+    songFailed: "Unable to convert the song.",
+    songSessionFailed: "Unable to prepare a secure song upload.",
+    songStatusFailed: "Unable to read the song conversion status.",
+    invalidSongResult: "The conversion service returned an invalid song file.",
+    songTooLarge: "The song must be 50 MiB or smaller.",
+    songTooLong: "The song must be five minutes or shorter.",
+    songOutputLabel: "Converted song",
+    songOutput: "Song output",
+    convertedBadge: "AI-converted vocal",
+    songReadyToReview: "Converted song ready",
+    songEmptyTitle: "Your converted song will appear here",
+    songEmptyDescription:
+      "Choose a song and your saved authorized voice. Processing on CPU can take several minutes.",
+    downloadSong: "Download MP3",
+    songPrivacy:
+      "The song uploads directly to your protected voice server instead of passing through Vercel. Temporary stems and the converted file are deleted after download.",
   },
   languageNames: {
     de: "German",
@@ -381,9 +421,11 @@ const russian: AppDictionary = {
     kicker: "Аудио с подтверждением согласия",
     title: "Студия голоса",
     description:
-      "Создайте многоразовый голос XTTS-v2 из разрешённого образца, а затем преобразуйте текст в аудио для скачивания. Результат будет похож на оригинал, но точность зависит от качества записи.",
+      "Создайте многоразовый голос из разрешённого образца, озвучивайте текст или заменяйте ведущий вокал песни с сохранением ритма и мелодии.",
   },
   voice: {
+    speechTab: "Озвучить текст",
+    songTab: "Заменить голос в песне",
     unableGenerate: "Не удалось создать аудио. Попробуйте ещё раз.",
     browserReadError: "Браузер не смог прочитать этот аудиофайл.",
     invalidFile: "Используйте аудиофайл MPEG, WAV, OGG, AAC, FLAC, WebM или MP4.",
@@ -446,6 +488,44 @@ const russian: AppDictionary = {
       "Добавьте разрешённые записи и текст. Аудио можно прослушать перед скачиванием WAV-файла.",
     privacy:
       "XTTS-v2 работает в настроенном сервисе голоса. Нормализованный образец хранится для повторного использования, а запись согласия не сохраняется. При удалении голоса его образец также удаляется из сервиса.",
+    songIdentity: "Голос в песне",
+    songTitle: "Заменить ведущий вокал",
+    songDescription:
+      "Сервис отделит ведущий вокал, преобразует его в сохранённый голос и сведёт с исходным аккомпанементом.",
+    songFile: "Файл песни",
+    songFileHelp: "MPEG, WAV, OGG, AAC, FLAC, WebM или MP4 · до 50 МиБ и 5 минут",
+    songFileRequirement: "файл песни",
+    songConsentRequirement: "разрешение на песню и голос",
+    songConsent:
+      "Я подтверждаю, что имею право обрабатывать эту песню, а владелец сохранённого голоса разрешил такое использование.",
+    noSongVoice: "Сначала создайте и сохраните голос с подтверждённым разрешением.",
+    createVoiceFirst: "Сначала создать голос",
+    songReady: "Всё готово к преобразованию песни.",
+    replaceSongVoice: "Заменить голос в песне",
+    preparingSong: "Готовим защищённую загрузку…",
+    uploadingSong: "Загружаем песню…",
+    queuedSong: "Ожидаем конвертер…",
+    preparingAudio: "Подготавливаем аудио…",
+    separatingVocals: "Отделяем вокал от аккомпанемента…",
+    convertingVocal: "Преобразуем певческий голос…",
+    remixingSong: "Сводим преобразованный вокал с песней…",
+    finishingSong: "Завершаем обработку песни…",
+    songFailed: "Не удалось преобразовать песню.",
+    songSessionFailed: "Не удалось подготовить защищённую загрузку песни.",
+    songStatusFailed: "Не удалось получить состояние обработки песни.",
+    invalidSongResult: "Сервис вернул некорректный файл песни.",
+    songTooLarge: "Размер песни не должен превышать 50 МиБ.",
+    songTooLong: "Длительность песни не должна превышать пяти минут.",
+    songOutputLabel: "Преобразованная песня",
+    songOutput: "Результат песни",
+    convertedBadge: "Вокал преобразован ИИ",
+    songReadyToReview: "Преобразованная песня готова",
+    songEmptyTitle: "Здесь появится преобразованная песня",
+    songEmptyDescription:
+      "Выберите песню и сохранённый разрешённый голос. Обработка на CPU может занять несколько минут.",
+    downloadSong: "Скачать MP3",
+    songPrivacy:
+      "Песня загружается напрямую на защищённый сервер голоса, минуя Vercel. Временные дорожки и результат удаляются после скачивания.",
   },
   languageNames: {
     de: "Немецкий",
@@ -519,6 +599,41 @@ const russianKnownErrors: Record<string, string> = {
   "XTTS inference failed.": "Не удалось выполнить генерацию XTTS.",
   "XTTS produced no audio.": "XTTS не создал аудио.",
   "Unsupported voice sample format.": "Формат образца голоса не поддерживается.",
+  "Voice Studio is not configured.": "Студия голоса не настроена.",
+  "Unable to prepare song conversion.":
+    "Не удалось подготовить преобразование песни.",
+  "A saved voice is required.": "Требуется сохранённый голос.",
+  "Invalid song access token.": "Недействительный токен доступа к песне.",
+  "Song access origin does not match.":
+    "Источник запроса не соответствует токену доступа к песне.",
+  "Song must be 50 MiB or smaller.":
+    "Размер песни не должен превышать 50 МиБ.",
+  "Song file is empty.": "Файл песни пуст.",
+  "Unsupported song format.": "Формат песни не поддерживается.",
+  "A song conversion is already running for this user.":
+    "Для этого пользователя уже выполняется преобразование песни.",
+  "The song conversion queue is full. Try again later.":
+    "Очередь преобразования песен заполнена. Попробуйте позже.",
+  "The song could not be decoded.": "Не удалось декодировать песню.",
+  "Song must be five minutes or shorter.":
+    "Длительность песни не должна превышать пяти минут.",
+  "Unable to separate the song vocals.":
+    "Не удалось отделить вокал от песни.",
+  "Unable to convert the singing voice.":
+    "Не удалось преобразовать певческий голос.",
+  "Unable to remix the converted song.":
+    "Не удалось свести преобразованную песню.",
+  "Song conversion produced no audio.":
+    "Преобразование песни не создало аудио.",
+  "Song conversion failed.": "Не удалось преобразовать песню.",
+  "Song conversion was not found.":
+    "Задача преобразования песни не найдена.",
+  "Song conversion is not ready.":
+    "Преобразование песни ещё не готово.",
+  "Converted song was not found.":
+    "Файл преобразованной песни не найден.",
+  "A running song conversion cannot be deleted.":
+    "Выполняемую задачу преобразования нельзя удалить.",
 };
 
 export function localizeKnownError(message: string, locale: AppLocale) {

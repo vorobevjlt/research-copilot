@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import {
   CONSENT_PHRASES,
@@ -8,19 +7,17 @@ import {
   type ConsentLanguage,
   type VoiceFileExtension,
 } from "@/lib/voice/constants";
+import {
+  createCloneToken,
+  readCloneToken as decodeCloneToken,
+  type CloneTokenPayload,
+} from "@/lib/voice/tokens";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const REQUEST_TIMEOUT_MS = 295_000;
-
-type CloneTokenPayload = {
-  version: 2;
-  userId: string;
-  voiceId: string;
-  name: string;
-};
 
 type VoiceServiceConfig = {
   apiKey: string;
@@ -145,47 +142,9 @@ function getVoiceServiceConfig(): VoiceServiceConfig {
   };
 }
 
-function tokenSignature(payload: string, secret: string) {
-  return createHmac("sha256", secret).update(payload).digest("base64url");
-}
-
-function createCloneToken(payload: CloneTokenPayload, secret: string) {
-  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  return `${encoded}.${tokenSignature(encoded, secret)}`;
-}
-
 function readCloneToken(token: string, userId: string, secret: string) {
-  if (token.length > 2048) {
-    throw new VoiceCloneError("The saved voice reference is invalid.", 400);
-  }
-  const [encoded, suppliedSignature, extra] = token.split(".");
-  if (!encoded || !suppliedSignature || extra) {
-    throw new VoiceCloneError("The saved voice reference is invalid.", 400);
-  }
-
-  const expected = Buffer.from(tokenSignature(encoded, secret));
-  const supplied = Buffer.from(suppliedSignature);
-  if (
-    expected.length !== supplied.length ||
-    !timingSafeEqual(expected, supplied)
-  ) {
-    throw new VoiceCloneError("The saved voice reference is invalid.", 400);
-  }
-
   try {
-    const payload = JSON.parse(
-      Buffer.from(encoded, "base64url").toString("utf8"),
-    ) as Partial<CloneTokenPayload>;
-    if (
-      payload.version !== 2 ||
-      payload.userId !== userId ||
-      typeof payload.voiceId !== "string" ||
-      !/^voice_[0-9a-f]{32}$/.test(payload.voiceId) ||
-      typeof payload.name !== "string"
-    ) {
-      throw new Error("Invalid payload");
-    }
-    return payload as CloneTokenPayload;
+    return decodeCloneToken(token, userId, secret);
   } catch {
     throw new VoiceCloneError("The saved voice reference is invalid.", 400);
   }

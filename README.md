@@ -82,6 +82,21 @@ XTTS-v2 supports voice cloning in the languages offered by the Voice Studio
 selector. It does not support free-form delivery instructions, so that OpenAI
 specific field is intentionally absent.
 
+The **Replace song voice** tab accepts a song up to 50 MiB and five minutes,
+separates its lead vocal with Demucs, converts that vocal to the user's saved
+authorized voice with FreeVC, and remixes an MP3. The browser obtains a
+short-lived user- and origin-bound token from Next.js and uploads the song
+directly to the voice server, so large files and long-running CPU jobs do not
+pass through a Vercel Function. Keep `XTTS_ALLOWED_ORIGINS` on the voice server
+limited to the deployed application origins. Temporary song files are removed
+after the converted result is downloaded, or automatically after six hours.
+On memory-constrained CPU hosts, XTTS and FreeVC run in separate short-lived
+processes so their model allocations are fully released between jobs.
+
+FreeVC and its Coqui model entry are MIT-licensed; Demucs is MIT-licensed. Voice
+conversion preserves the source timing and melody but is an approximation, and
+isolating backing vocals or dense mixes can introduce artifacts.
+
 ### Run XTTS-v2
 
 XTTS-v2 model weights use the non-commercial Coqui Public Model License. Review
@@ -94,6 +109,7 @@ license, and start the CPU service:
 ```bash
 export XTTS_SERVICE_API_KEY="replace-with-a-long-random-value"
 export COQUI_TOS_AGREED=1
+export XTTS_ALLOWED_ORIGINS="https://your-app.example.com,http://localhost:3000"
 docker compose -f compose.xtts.yml up --build
 ```
 

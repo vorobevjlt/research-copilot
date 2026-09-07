@@ -1294,12 +1294,48 @@ cpk-web-inspector {
   line-height: 1.65;
 }
 
+.voice-workspace {
+  padding-bottom: 3rem;
+}
+
+.voice-workspace-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid #777777;
+  border-radius: 999px;
+  padding: 0.25rem;
+  background: rgb(255 255 255 / 0.12);
+}
+
+.voice-workspace-tabs button {
+  min-height: 2.35rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 1rem;
+  background: transparent;
+  color: #4e4e4e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.voice-workspace-tabs button[aria-selected="true"] {
+  background: #1c1c1c;
+  color: #ffffff;
+}
+
+.voice-workspace-tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .voice-studio {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.75fr);
   gap: 1rem;
   align-items: start;
-  padding-bottom: 3rem;
 }
 
 .voice-builder,
@@ -1397,6 +1433,46 @@ cpk-web-inspector {
   display: grid;
   gap: 1rem;
   margin-top: 1.25rem;
+}
+
+.song-description {
+  max-width: 40rem;
+  margin: 0.85rem 0 0;
+  color: #5d5d5d;
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.song-voice-needed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  border: 1px solid #8a744d;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  background: rgb(138 116 77 / 0.09);
+}
+
+.song-voice-needed p {
+  margin: 0;
+  color: #5b4a2d;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.song-voice-needed button {
+  flex: 0 0 auto;
+  border: 1px solid #6e6047;
+  border-radius: 999px;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  color: #403620;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 800;
 }
 
 .voice-field-row {
@@ -1555,6 +1631,54 @@ cpk-web-inspector {
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 0.16rem;
+}
+
+.song-upload-card {
+  margin-top: 1.1rem;
+}
+
+.song-consent-check {
+  margin-top: 1rem;
+}
+
+.song-progress {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.song-progress > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #4f4f4f;
+  font-size: 0.68rem;
+}
+
+.song-progress strong {
+  color: #222222;
+  font-size: 0.7rem;
+}
+
+.song-progress progress {
+  width: 100%;
+  height: 0.45rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: #a4a4a4;
+  accent-color: #222222;
+}
+
+.song-progress progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: #a4a4a4;
+}
+
+.song-progress progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: #222222;
 }
 
 .voice-consent-check {
@@ -1840,6 +1964,29 @@ cpk-web-inspector {
   opacity: 0.82;
 }
 
+.song-result-art {
+  display: grid;
+  width: 8.5rem;
+  height: 8.5rem;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #d0d0d0 0 8%, transparent 9%),
+    repeating-radial-gradient(circle, #252525 0 3px, #343434 4px 6px);
+  color: #d7d7d7;
+  font-size: 1.35rem;
+}
+
+.song-empty-orbit span {
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  place-items: center;
+  background: transparent;
+  color: #313131;
+  font-size: 1rem;
+}
+
 .voice-result p {
   margin: 1.25rem 0 0;
   color: #686868;
@@ -1935,6 +2082,16 @@ cpk-web-inspector {
     padding: 1rem;
   }
 
+  .voice-workspace-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .voice-workspace-tabs button {
+    padding: 0 0.55rem;
+  }
+
   .voice-field-row,
   .voice-upload-grid {
     grid-template-columns: 1fr;
@@ -1950,6 +2107,11 @@ cpk-web-inspector {
 
   .voice-upload-card {
     min-height: 8.5rem;
+  }
+
+  .song-voice-needed {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .header-actions {
