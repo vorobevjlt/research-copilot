@@ -1,4 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n-server";
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
@@ -13,6 +15,7 @@ type ProjectSummary = {
 };
 
 export default async function ProjectsPage() {
+  const dictionary = getDictionary(await getServerLocale());
   const { userId } = await auth.protect();
   const { data, error } = await getSupabaseAdmin()
     .from("projects")
@@ -27,7 +30,7 @@ export default async function ProjectsPage() {
       details: error.details,
       hint: error.hint,
     });
-    throw new Error("Unable to load projects.");
+    throw new Error(dictionary.projects.loadError);
   }
 
   const projects = (data ?? []) as ProjectSummary[];
@@ -37,9 +40,14 @@ export default async function ProjectsPage() {
       <div className="projects-shell">
         <header className="projects-header">
           <Link className="projects-brand" href="/">
-            AI Assistant
+            {dictionary.common.brand}
           </Link>
-          <UserButton />
+          <div className="projects-header-actions">
+            <Link className="voice-studio-link" href="/dashboard/voice">
+              {dictionary.common.voiceStudio}
+            </Link>
+            <UserButton />
+          </div>
         </header>
 
         {projects.length === 0 ? (
@@ -47,12 +55,9 @@ export default async function ProjectsPage() {
         ) : (
           <>
             <div className="projects-intro">
-              <p className="project-kicker">Project context</p>
-              <h1>What are we working on?</h1>
-              <p>
-                Choose an existing project or create a new one before starting
-                a conversation.
-              </p>
+              <p className="project-kicker">{dictionary.projects.kicker}</p>
+              <h1>{dictionary.projects.title}</h1>
+              <p>{dictionary.projects.description}</p>
             </div>
 
             <div className="projects-layout">
@@ -61,8 +66,10 @@ export default async function ProjectsPage() {
                 aria-labelledby="projects-heading"
               >
                 <div className="projects-list-heading">
-                  <h2 id="projects-heading">Your projects</h2>
-                  <span aria-label={`${projects.length} projects`}>
+                  <h2 id="projects-heading">{dictionary.projects.yours}</h2>
+                  <span
+                    aria-label={`${projects.length} ${dictionary.projects.countLabel}`}
+                  >
                     {projects.length}
                   </span>
                 </div>

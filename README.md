@@ -43,6 +43,9 @@ builds it with `npm run build`.
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
    SUPABASE_SERVICE_ROLE_KEY
    RAG_SERVER_URL                # public URL of the remote FastAPI service
+   XTTS_SERVICE_URL              # URL of the XTTS-v2 service
+   XTTS_SERVICE_API_KEY          # shared secret used only by the Next.js server
+   VOICE_CLONE_SIGNING_SECRET    # optional; defaults to XTTS_SERVICE_API_KEY
    ```
 
 3. Deploy the project. For a production deployment, use your production Clerk
@@ -58,3 +61,57 @@ testing webhooks against a local development server.
 
 > `RAG_SERVER_URL` must be reachable from the deployed Next.js server. It is not
 > exposed to browser code.
+
+## Voice Studio
+
+Authenticated users can open **Voice Studio** from the projects or chat header.
+Creating a custom voice requires a consent recording and a separate sample from
+the same speaker. Each upload may be up to 10 MiB. The speaker must read the
+displayed consent phrase exactly. The Next.js route validates the consent gate,
+then sends only the separate voice sample to the XTTS-v2 service.
+
+The service normalizes samples to mono 24 kHz WAV and stores them under a
+one-way hash of the authenticated Clerk user ID. The application streams the
+generated WAV back to the browser and stores a signed, user-bound voice
+reference in that browser for reuse. Using **Forget** deletes both the stored
+sample and browser reference. Consent recordings and generated files are not
+retained. The current UI keeps one reusable voice per user; creating another
+replaces the previous stored sample.
+
+XTTS-v2 supports voice cloning in the languages offered by the Voice Studio
+selector. It does not support free-form delivery instructions, so that OpenAI
+specific field is intentionally absent.
+
+### Run XTTS-v2 locally with Docker
+
+XTTS-v2 model weights use the non-commercial Coqui Public Model License. Review
+that license before running the service. This integration is therefore suitable
+for personal, evaluation, and other permitted non-commercial use only.
+
+Set the same long random service key for Docker and Next.js, accept the model
+license, and start the CPU service:
+
+```bash
+export XTTS_SERVICE_API_KEY="replace-with-a-long-random-value"
+export COQUI_TOS_AGREED=1
+docker compose -f compose.xtts.yml up --build
+```
+
+Then add the following server-only values to `.env.local` and restart Next.js:
+
+```text
+XTTS_SERVICE_URL=http://127.0.0.1:8001
+XTTS_SERVICE_API_KEY=replace-with-the-same-long-random-value
+VOICE_CLONE_SIGNING_SECRET=replace-with-a-different-long-random-value
+```
+
+The first startup downloads and loads the XTTS-v2 model. Model and voice data
+live in named Docker volumes so container rebuilds do not discard them. The CPU
+image works without special hardware but synthesis can be slow. For a remote
+deployment, run this Python service on persistent GPU infrastructure, expose it
+over HTTPS, and set `XTTS_SERVICE_URL` in Vercel to that private or protected
+URL. The model cannot run inside a Vercel Function.
+
+The service exposes unauthenticated `GET /health`; all voice creation,
+generation, and deletion endpoints require `XTTS_SERVICE_API_KEY` as a bearer
+token.

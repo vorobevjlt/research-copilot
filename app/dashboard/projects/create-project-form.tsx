@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppLocale } from "@/app/locale-provider";
 import { useActionState } from "react";
 import { createProject, type CreateProjectState } from "./actions";
 
@@ -12,6 +13,7 @@ type CreateProjectFormProps = {
 export function CreateProjectForm({
   autoFocus = false,
 }: CreateProjectFormProps) {
+  const { dictionary } = useAppLocale();
   const [state, formAction, pending] = useActionState(
     createProject,
     initialState,
@@ -20,21 +22,18 @@ export function CreateProjectForm({
   return (
     <form action={formAction} className="project-form">
       <div>
-        <p className="project-kicker">New project</p>
-        <h2>Create a context</h2>
-        <p className="project-form-copy">
-          Tell the assistant what you are working on. This context is included
-          in every conversation for the project.
-        </p>
+        <p className="project-kicker">{dictionary.projectForm.kicker}</p>
+        <h2>{dictionary.projectForm.title}</h2>
+        <p className="project-form-copy">{dictionary.projectForm.description}</p>
       </div>
 
       <label className="project-field">
-        <span>Project name</span>
+        <span>{dictionary.projectForm.name}</span>
         <input
           name="name"
           type="text"
           maxLength={80}
-          placeholder="e.g. Market research"
+          placeholder={dictionary.projectForm.namePlaceholder}
           autoComplete="off"
           autoFocus={autoFocus}
           required
@@ -42,12 +41,12 @@ export function CreateProjectForm({
       </label>
 
       <label className="project-field">
-        <span>Context</span>
+        <span>{dictionary.projectForm.context}</span>
         <textarea
           name="context"
           rows={7}
           maxLength={8000}
-          placeholder="Goals, audience, constraints, source material, or anything else the assistant should know..."
+          placeholder={dictionary.projectForm.contextPlaceholder}
           required
         />
       </label>
@@ -57,7 +56,7 @@ export function CreateProjectForm({
       </p>
 
       <button className="project-create-button" type="submit" disabled={pending}>
-        {pending ? "Creating…" : "Create and open chat"}
+        {pending ? dictionary.projectForm.creating : dictionary.projectForm.create}
       </button>
     </form>
   );

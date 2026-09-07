@@ -1,4 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n-server";
 import { auth } from "@clerk/nextjs/server";
 import type { ReactNode } from "react";
 
@@ -9,6 +11,7 @@ type DashboardLayoutProps = Readonly<{
 export default async function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
+  const dictionary = getDictionary(await getServerLocale());
   const { userId } = await auth.protect();
   const { error } = await getSupabaseAdmin().from("users").upsert(
     { clerk_id: userId },
@@ -22,7 +25,7 @@ export default async function DashboardLayout({
       details: error.details,
       hint: error.hint,
     });
-    throw new Error("Unable to prepare your account.");
+    throw new Error(dictionary.projects.accountError);
   }
 
   return <>{children}</>;

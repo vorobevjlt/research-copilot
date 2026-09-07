@@ -1,4 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n-server";
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
@@ -16,6 +18,7 @@ type ProjectRecord = {
 };
 
 export default async function ProjectChatPage({ params }: ChatPageProps) {
+  const dictionary = getDictionary(await getServerLocale());
   const { userId } = await auth.protect();
   const { projectId } = await params;
   const { data, error } = await getSupabaseAdmin()
@@ -32,7 +35,7 @@ export default async function ProjectChatPage({ params }: ChatPageProps) {
       details: error.details,
       hint: error.hint,
     });
-    throw new Error("Unable to load project.");
+    throw new Error(dictionary.chat.projectLoadError);
   }
   if (!data) notFound();
 
@@ -48,12 +51,19 @@ export default async function ProjectChatPage({ params }: ChatPageProps) {
             </span>
             <div className="chat-project-title">
               <span>{project.name}</span>
-              <small>AI Assistant</small>
+              <small>{dictionary.chat.assistant}</small>
             </div>
           </div>
           <div className="header-actions">
+            <Link
+              className="voice-studio-link"
+              href="/dashboard/voice"
+              data-short-label={dictionary.common.voiceShort}
+            >
+              {dictionary.common.voiceStudio}
+            </Link>
             <Link className="change-project-link" href="/dashboard/projects">
-              Change project
+              {dictionary.chat.changeProject}
             </Link>
             <UserButton />
           </div>

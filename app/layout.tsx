@@ -1,12 +1,15 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import "@copilotkit/react-core/v2/styles.css";
+import { getServerLocale } from "@/lib/i18n-server";
+import { AppProviders } from "./locale-provider";
 import "./globals.css";
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getServerLocale();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>
-        <ClerkProvider afterSignOutUrl="/">{children}</ClerkProvider>
+        <AppProviders initialLocale={locale}>{children}</AppProviders>
       </body>
     </html>
   );

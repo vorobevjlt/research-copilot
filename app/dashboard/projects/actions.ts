@@ -1,6 +1,8 @@
 "use server";
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n-server";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -30,26 +32,25 @@ export async function createProject(
   _previousState: CreateProjectState,
   formData: FormData,
 ): Promise<CreateProjectState> {
+  const copy = getDictionary(await getServerLocale()).projectForm;
   const { userId } = await auth.protect();
   const rawName = formData.get("name");
   const rawContext = formData.get("context");
 
   if (typeof rawName !== "string" || typeof rawContext !== "string") {
-    return { error: "Enter a project name and context." };
+    return { error: copy.enterNameAndContext };
   }
 
   const name = rawName.trim();
   const context = rawContext.trim();
 
-  if (!name) return { error: "Project name is required." };
+  if (!name) return { error: copy.nameRequired };
   if (name.length > MAX_NAME_LENGTH) {
-    return { error: `Project name must be ${MAX_NAME_LENGTH} characters or less.` };
+    return { error: copy.nameTooLong };
   }
-  if (!context) return { error: "Add some context for the assistant." };
+  if (!context) return { error: copy.contextRequired };
   if (context.length > MAX_CONTEXT_LENGTH) {
-    return {
-      error: `Project context must be ${MAX_CONTEXT_LENGTH.toLocaleString()} characters or less.`,
-    };
+    return { error: copy.contextTooLong };
   }
 
   const supabase = getSupabaseAdmin();
@@ -65,7 +66,7 @@ export async function createProject(
       details: userError.details,
       hint: userError.hint,
     });
-    return { error: "Your account could not be prepared. Please try again." };
+    return { error: copy.accountError };
   }
 
   const { data, error } = await supabase
@@ -81,7 +82,7 @@ export async function createProject(
       details: error?.details,
       hint: error?.hint,
     });
-    return { error: "The project could not be created. Please try again." };
+    return { error: copy.createError };
   }
 
   const { error: settingsError } = await supabase
@@ -116,7 +117,7 @@ export async function createProject(
       });
     }
 
-    return { error: "The project could not be prepared. Please try again." };
+    return { error: copy.prepareError };
   }
 
   redirect(`/dashboard/chat/${data.id}`);

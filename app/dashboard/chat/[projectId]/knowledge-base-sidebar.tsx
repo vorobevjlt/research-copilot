@@ -1,6 +1,8 @@
 "use client";
 
+import { useAppLocale } from "@/app/locale-provider";
 import { useAuth } from "@clerk/nextjs";
+import { localizeKnownError, type AppLocale } from "@/lib/i18n";
 import {
   DOCUMENT_ACCEPT,
   MAX_DOCUMENT_SIZE,
@@ -55,25 +57,29 @@ const supportedExtensions = new Set([
   "md",
 ]);
 
-function apiMessage(payload: unknown, fallback: string) {
+function apiMessage(payload: unknown, fallback: string, locale: AppLocale) {
   if (
     payload &&
     typeof payload === "object" &&
     "detail" in payload &&
     typeof payload.detail === "string"
   ) {
-    return payload.detail;
+    return localizeKnownError(payload.detail, locale);
   }
   return fallback;
 }
 
-async function readApi<T>(response: Response, fallback: string): Promise<T> {
+async function readApi<T>(
+  response: Response,
+  fallback: string,
+  locale: AppLocale,
+): Promise<T> {
   const payload = (await response.json().catch(() => null)) as
     | ApiEnvelope<T>
     | { detail?: string }
     | null;
 
-  if (!response.ok) throw new Error(apiMessage(payload, fallback));
+  if (!response.ok) throw new Error(apiMessage(payload, fallback, locale));
   if (!payload || !("data" in payload)) throw new Error(fallback);
   return payload.data;
 }
@@ -95,9 +101,29 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function statusLabel(status: string) {
-  if (status === "completed") return "Ready";
-  if (status === "failed") return "Failed";
+function statusLabel(
+  status: string,
+  labels: {
+    ready: string;
+    failed: string;
+    queued: string;
+    processing: string;
+    partitioning: string;
+    chunking: string;
+    summarising: string;
+    vectorization: string;
+    uploading: string;
+  },
+) {
+  if (status === "completed") return labels.ready;
+  if (status === "failed") return labels.failed;
+  if (status === "queued") return labels.queued;
+  if (status === "processing") return labels.processing;
+  if (status === "partitioning") return labels.partitioning;
+  if (status === "chunking") return labels.chunking;
+  if (status === "summarising") return labels.summarising;
+  if (status === "vectorization") return labels.vectorization;
+  if (status === "uploading") return labels.uploading;
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
@@ -122,6 +148,11 @@ function uploadFileToStorage(
   file: File,
   contentType: string,
   onProgress: (progress: number) => void,
+  messages: {
+    rejected: string;
+    failed: string;
+    cancelled: string;
+  },
 ) {
   return new Promise<void>((resolve, reject) => {
     const request = new XMLHttpRequest();
@@ -140,13 +171,13 @@ function uploadFileToStorage(
         resolve();
         return;
       }
-      reject(new Error(`Storage rejected ${file.name} (${request.status}).`));
+      reject(new Error(`${messages.rejected} ${file.name} (${request.status}).`));
     });
     request.addEventListener("error", () => {
-      reject(new Error(`Storage upload failed for ${file.name}.`));
+      reject(new Error(`${messages.failed} ${file.name}.`));
     });
     request.addEventListener("abort", () => {
-      reject(new Error(`Upload cancelled for ${file.name}.`));
+      reject(new Error(`${messages.cancelled} ${file.name}.`));
     });
 
     request.send(file);
@@ -159,6 +190,8 @@ export function KnowledgeBaseSidebar({
   onClose,
   citations,
 }: KnowledgeBaseSidebarProps) {
+  const { locale, dictionary } = useAppLocale();
+  const copy = dictionary.knowledge;
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const [tab, setTab] = useState<SidebarTab>("sources");
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
@@ -176,23 +209,25 @@ export function KnowledgeBaseSidebar({
     const response = await sameOriginFetch(basePath);
     const data = await readApi<ProjectDocument[]>(
       response,
-      "Unable to load project documents.",
+      copy.loadDocumentsError,
+      locale,
     );
     setDocuments(data);
-  }, [basePath]);
+  }, [basePath, copy.loadDocumentsError, locale]);
 
   const loadSettings = useCallback(async () => {
     const response = await sameOriginFetch(`${basePath}/settings`);
     const data = await readApi<ProjectSettings>(
       response,
-      "Unable to load knowledge settings.",
+      copy.loadSettingsError,
+      locale,
     );
     setSettings({
       ...data,
       rag_enabled: true,
       answer_mode: "knowledge_only",
     });
-  }, [basePath]);
+  }, [basePath, copy.loadSettingsError, locale]);
 
   useEffect(() => {
     if (!isAuthLoaded) {
@@ -202,7 +237,7 @@ export function KnowledgeBaseSidebar({
 
     if (!isSignedIn) {
       setLoading(false);
-      setError("User is not signed in.");
+      setError(copy.signedOut);
       return;
     }
 
@@ -215,7 +250,7 @@ export function KnowledgeBaseSidebar({
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Unable to load the knowledge base.",
+              : copy.loadError,
           );
         }
       })
@@ -225,7 +260,7 @@ export function KnowledgeBaseSidebar({
     return () => {
       cancelled = true;
     };
-  }, [isAuthLoaded, isSignedIn, loadDocuments, loadSettings]);
+  }, [copy.loadError, copy.signedOut, isAuthLoaded, isSignedIn, loadDocuments, loadSettings]);
 
   const hasActiveDocuments = documents.some((document) =>
     activeStatuses.has(document.processing_status),
@@ -260,7 +295,7 @@ export function KnowledgeBaseSidebar({
 
       if (accepted.length !== files.length) {
         setError(
-          "Some files were skipped. Use PDF, DOCX, PPTX, XLSX, TXT, or MD files up to 50 MB.",
+          copy.skippedFiles,
         );
       } else {
         setError("");
@@ -296,7 +331,11 @@ export function KnowledgeBaseSidebar({
               upload_url: string;
               s3_key: string;
               content_type: string;
-            }>(signResponse, `Unable to prepare ${file.name} for upload.`);
+            }>(
+              signResponse,
+              `${copy.prepareUpload} ${file.name} ${copy.forUpload}`,
+              locale,
+            );
             documentId = signed.document_id;
 
             await uploadFileToStorage(
@@ -311,6 +350,11 @@ export function KnowledgeBaseSidebar({
                       : upload,
                   ),
                 );
+              },
+              {
+                rejected: copy.storageRejected,
+                failed: copy.storageUploadFailed,
+                cancelled: copy.uploadCancelled,
               },
             );
             stored = true;
@@ -330,7 +374,8 @@ export function KnowledgeBaseSidebar({
             });
             await readApi<ProjectDocument>(
               confirmResponse,
-              `Unable to start processing ${file.name}.`,
+              `${copy.startProcessing} ${file.name}.`,
+              locale,
             );
             setUploads((current) =>
               current.filter((upload) => upload.id !== uploadId),
@@ -352,7 +397,7 @@ export function KnowledgeBaseSidebar({
                       error:
                         uploadError instanceof Error
                           ? uploadError.message
-                          : "Upload failed.",
+                          : copy.uploadFailed,
                     }
                   : upload,
               ),
@@ -362,7 +407,7 @@ export function KnowledgeBaseSidebar({
         }),
       );
     },
-    [basePath, loadDocuments],
+    [basePath, copy, loadDocuments, locale],
   );
 
   function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
@@ -378,7 +423,13 @@ export function KnowledgeBaseSidebar({
   }
 
   async function removeDocument(document: ProjectDocument) {
-    if (!window.confirm(`Remove ${document.filename} from this project?`)) return;
+    if (
+      !window.confirm(
+        `${copy.removeConfirmPrefix} ${document.filename} ${copy.removeConfirmSuffix}`,
+      )
+    ) {
+      return;
+    }
     try {
       const response = await sameOriginFetch(
         `${basePath}/documents/${encodeURIComponent(document.id)}`,
@@ -386,7 +437,7 @@ export function KnowledgeBaseSidebar({
       );
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
-        throw new Error(apiMessage(payload, "Unable to remove the document."));
+        throw new Error(apiMessage(payload, copy.removeError, locale));
       }
       setDocuments((current) =>
         current.filter((item) => item.id !== document.id),
@@ -395,7 +446,7 @@ export function KnowledgeBaseSidebar({
       setError(
         deleteError instanceof Error
           ? deleteError.message
-          : "Unable to remove the document.",
+          : copy.removeError,
       );
     }
   }
@@ -407,13 +458,13 @@ export function KnowledgeBaseSidebar({
         `${basePath}/documents/${encodeURIComponent(document.id)}/retry`,
         { method: "POST" },
       );
-      await readApi<ProjectDocument>(response, "Unable to retry the document.");
+      await readApi<ProjectDocument>(response, copy.retryError, locale);
       await loadDocuments();
     } catch (retryError) {
       setError(
         retryError instanceof Error
           ? retryError.message
-          : "Unable to retry the document.",
+          : copy.retryError,
       );
     }
   }
@@ -435,7 +486,8 @@ export function KnowledgeBaseSidebar({
       });
       const updated = await readApi<ProjectSettings>(
         response,
-        "Unable to save knowledge settings.",
+        copy.saveError,
+        locale,
       );
       setSettings({
         ...updated,
@@ -446,7 +498,7 @@ export function KnowledgeBaseSidebar({
       setError(
         saveError instanceof Error
           ? saveError.message
-          : "Unable to save knowledge settings.",
+          : copy.saveError,
       );
     } finally {
       setSaving(false);
@@ -459,24 +511,24 @@ export function KnowledgeBaseSidebar({
         <button
           className="knowledge-backdrop"
           type="button"
-          aria-label="Close knowledge base"
+          aria-label={copy.close}
           onClick={onClose}
         />
       ) : null}
       <aside
         id="project-knowledge-base"
         className={`knowledge-sidebar${open ? " is-open" : ""}`}
-        aria-label="Project knowledge base"
+        aria-label={copy.panelLabel}
       >
         <div className="knowledge-header">
           <div>
-            <span className="knowledge-kicker">Project context</span>
-            <h2>Knowledge base</h2>
+            <span className="knowledge-kicker">{copy.kicker}</span>
+            <h2>{copy.title}</h2>
           </div>
           <button
             className="knowledge-close"
             type="button"
-            aria-label="Close knowledge base"
+            aria-label={copy.close}
             onClick={onClose}
           >
             ×
@@ -491,7 +543,7 @@ export function KnowledgeBaseSidebar({
             aria-selected={tab === "sources"}
             onClick={() => setTab("sources")}
           >
-            Sources <span>{documents.length}</span>
+            {copy.sources} <span>{documents.length}</span>
           </button>
           <button
             className={tab === "settings" ? "is-active" : ""}
@@ -500,7 +552,7 @@ export function KnowledgeBaseSidebar({
             aria-selected={tab === "settings"}
             onClick={() => setTab("settings")}
           >
-            Settings
+            {copy.settings}
           </button>
         </div>
 
@@ -529,18 +581,21 @@ export function KnowledgeBaseSidebar({
               <span className="knowledge-upload-mark" aria-hidden="true">
                 ↑
               </span>
-              <strong>Add project sources</strong>
-              <p>Drop files here, or choose from your device.</p>
+              <strong>{copy.addSources}</strong>
+              <p>{copy.dropFiles}</p>
               <button type="button" onClick={() => fileInput.current?.click()}>
-                Choose files
+                {copy.chooseFiles}
               </button>
-              <small>PDF, DOCX, PPTX, XLSX, TXT, MD · 50 MB each</small>
+              <small>{copy.fileHelp}</small>
             </div>
 
             {citations.length > 0 ? (
-              <section className="knowledge-citations" aria-label="Latest answer sources">
+              <section
+                className="knowledge-citations"
+                aria-label={copy.latestSourcesLabel}
+              >
                 <div className="knowledge-section-heading">
-                  <h3>Used in latest answer</h3>
+                  <h3>{copy.usedLatest}</h3>
                   <span>{citations.length}</span>
                 </div>
                 <div className="knowledge-citation-list">
@@ -551,13 +606,13 @@ export function KnowledgeBaseSidebar({
                     >
                       <span>{index + 1}</span>
                       <div>
-                        <strong>{citation.filename ?? "Project source"}</strong>
+                        <strong>{citation.filename ?? copy.projectSource}</strong>
                         <small>
                           {citation.sheet
                             ? `${citation.sheet}${citation.row_range ? ` · ${citation.row_range}` : ""}`
                             : citation.page
-                              ? `Page ${citation.page}`
-                              : "Relevant passage"}
+                              ? `${copy.page} ${citation.page}`
+                              : copy.relevantPassage}
                         </small>
                       </div>
                     </div>
@@ -568,15 +623,15 @@ export function KnowledgeBaseSidebar({
 
             <section className="knowledge-documents">
               <div className="knowledge-section-heading">
-                <h3>Project files</h3>
-                {hasActiveDocuments ? <span>Processing</span> : null}
+                <h3>{copy.projectFiles}</h3>
+                {hasActiveDocuments ? <span>{copy.processing}</span> : null}
               </div>
 
-              {loading ? <p className="knowledge-empty">Loading sources…</p> : null}
+              {loading ? <p className="knowledge-empty">{copy.loadingSources}</p> : null}
 
               {!loading && sortedDocuments.length === 0 && uploads.length === 0 ? (
                 <p className="knowledge-empty">
-                  No sources yet. Uploaded files stay isolated to this project.
+                  {copy.noSources}
                 </p>
               ) : null}
 
@@ -588,16 +643,16 @@ export function KnowledgeBaseSidebar({
                       <strong title={upload.name}>{upload.name}</strong>
                       <small className={`status-${upload.status}`}>
                         {upload.status === "confirming"
-                          ? "Uploaded 100% · Starting processing"
+                          ? copy.uploadedStarting
                           : upload.status === "failed"
                             ? upload.error
-                            : `Uploading ${upload.progress}%`}
+                            : `${copy.uploading} ${upload.progress}%`}
                       </small>
                       {upload.status !== "failed" ? (
                         <div
                           className="knowledge-upload-progress"
                           role="progressbar"
-                          aria-label={`Uploading ${upload.name}`}
+                          aria-label={`${copy.uploading} ${upload.name}`}
                           aria-valuemin={0}
                           aria-valuemax={100}
                           aria-valuenow={upload.progress}
@@ -609,7 +664,7 @@ export function KnowledgeBaseSidebar({
                     {upload.status === "failed" ? (
                       <button
                         type="button"
-                        aria-label={`Dismiss ${upload.name}`}
+                        aria-label={`${copy.dismiss} ${upload.name}`}
                         onClick={() =>
                           setUploads((current) =>
                             current.filter((item) => item.id !== upload.id),
@@ -635,15 +690,15 @@ export function KnowledgeBaseSidebar({
                       <div className="knowledge-document-copy">
                         <strong title={document.filename}>{document.filename}</strong>
                         <small className={`status-${document.processing_status}`}>
-                          {failure ?? `${statusLabel(document.processing_status)} · ${formatBytes(document.file_size)}`}
+                          {failure ?? `${statusLabel(document.processing_status, copy)} · ${formatBytes(document.file_size)}`}
                         </small>
                       </div>
                       <div className="knowledge-document-actions">
                         {document.processing_status === "failed" ? (
                           <button
                             type="button"
-                            aria-label={`Retry ${document.filename}`}
-                            title="Retry processing"
+                            aria-label={`${copy.retry} ${document.filename}`}
+                            title={copy.retryProcessing}
                             onClick={() => void retryDocument(document)}
                           >
                             ↻
@@ -651,8 +706,8 @@ export function KnowledgeBaseSidebar({
                         ) : null}
                         <button
                           type="button"
-                          aria-label={`Remove ${document.filename}`}
-                          title="Remove source"
+                          aria-label={`${copy.remove} ${document.filename}`}
+                          title={copy.removeSource}
                           onClick={() => void removeDocument(document)}
                         >
                           ×
@@ -667,11 +722,11 @@ export function KnowledgeBaseSidebar({
         ) : (
           <div className="knowledge-content knowledge-settings">
             {loading || !settings ? (
-              <p className="knowledge-empty">Loading settings…</p>
+              <p className="knowledge-empty">{copy.loadingSettings}</p>
             ) : (
               <>
                 <fieldset>
-                  <legend>Agent</legend>
+                  <legend>{copy.agent}</legend>
                   <label className="knowledge-radio-row">
                     <input
                       type="radio"
@@ -685,10 +740,8 @@ export function KnowledgeBaseSidebar({
                       }
                     />
                     <div>
-                      <strong>Simple agent</strong>
-                      <small>
-                        Runs a direct search and answers from the most relevant project sources.
-                      </small>
+                      <strong>{copy.simpleAgent}</strong>
+                      <small>{copy.simpleAgentDescription}</small>
                     </div>
                   </label>
                   <label className="knowledge-radio-row">
@@ -704,16 +757,14 @@ export function KnowledgeBaseSidebar({
                       }
                     />
                     <div>
-                      <strong>Supervisor agent</strong>
-                      <small>
-                        Coordinates a more thorough, multi-step search across project sources.
-                      </small>
+                      <strong>{copy.supervisorAgent}</strong>
+                      <small>{copy.supervisorAgentDescription}</small>
                     </div>
                   </label>
                 </fieldset>
 
                 <fieldset>
-                  <legend>Search strategy</legend>
+                  <legend>{copy.searchStrategy}</legend>
                   <label className="knowledge-radio-row">
                     <input
                       type="radio"
@@ -727,10 +778,8 @@ export function KnowledgeBaseSidebar({
                       }
                     />
                     <div>
-                      <strong>Hybrid search</strong>
-                      <small>
-                        Combines semantic similarity with exact keyword matching.
-                      </small>
+                      <strong>{copy.hybridSearch}</strong>
+                      <small>{copy.hybridSearchDescription}</small>
                     </div>
                   </label>
                   <label className="knowledge-radio-row">
@@ -748,17 +797,14 @@ export function KnowledgeBaseSidebar({
                       }
                     />
                     <div>
-                      <strong>Multi-query hybrid search</strong>
-                      <small>
-                        Tries several query variations, then combines semantic and keyword results.
-                      </small>
+                      <strong>{copy.multiQuerySearch}</strong>
+                      <small>{copy.multiQuerySearchDescription}</small>
                     </div>
                   </label>
                 </fieldset>
 
                 <div className="knowledge-settings-note">
-                  Answers stay inside this project’s context and uploaded sources. If
-                  the available information is insufficient, the agent will say so.
+                  {copy.settingsNote}
                 </div>
 
                 <button
@@ -767,7 +813,7 @@ export function KnowledgeBaseSidebar({
                   disabled={saving}
                   onClick={() => void saveSettings()}
                 >
-                  {saving ? "Saving…" : "Save settings"}
+                  {saving ? copy.saving : copy.saveSettings}
                 </button>
               </>
             )}

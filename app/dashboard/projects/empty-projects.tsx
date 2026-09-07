@@ -1,13 +1,18 @@
 "use client";
 
+import { useAppLocale } from "@/app/locale-provider";
 import { useState } from "react";
 import { CreateProjectForm } from "./create-project-form";
 
 export function EmptyProjects() {
+  const { dictionary } = useAppLocale();
   const [isCreating, setIsCreating] = useState(false);
 
   return (
-    <section className="projects-first" aria-label="Projects">
+    <section
+      className="projects-first"
+      aria-label={dictionary.projectForm.projectsLabel}
+    >
       {isCreating ? (
         <div className="projects-first-form">
           <button
@@ -15,18 +20,16 @@ export function EmptyProjects() {
             type="button"
             onClick={() => setIsCreating(false)}
           >
-            <span aria-hidden="true">←</span> Back
+            <span aria-hidden="true">←</span> {dictionary.projectForm.back}
           </button>
           <CreateProjectForm autoFocus />
         </div>
       ) : (
         <div className="projects-first-empty">
           <div>
-            <p className="project-kicker">Your projects</p>
-            <h1 id="first-project-heading">No projects yet</h1>
-            <p>
-              Create a project to give your conversations a shared context.
-            </p>
+            <p className="project-kicker">{dictionary.projectForm.emptyKicker}</p>
+            <h1 id="first-project-heading">{dictionary.projectForm.emptyTitle}</h1>
+            <p>{dictionary.projectForm.emptyDescription}</p>
           </div>
 
           <button
@@ -34,7 +37,7 @@ export function EmptyProjects() {
             type="button"
             onClick={() => setIsCreating(true)}
           >
-            <span aria-hidden="true">+</span> Create new project
+            <span aria-hidden="true">+</span> {dictionary.projectForm.emptyAction}
           </button>
         </div>
       )}

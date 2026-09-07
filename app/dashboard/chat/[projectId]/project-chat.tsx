@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppLocale } from "@/app/locale-provider";
 import {
   CopilotChat,
   CopilotKit,
@@ -42,6 +43,7 @@ export function ProjectChat({ project }: ProjectChatProps) {
 }
 
 function ProjectChatExperience({ project }: ProjectChatProps) {
+  const { locale, dictionary } = useAppLocale();
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const { agent } = useAgent({ agentId: "default" });
   const projectContext = useMemo(
@@ -49,13 +51,13 @@ function ProjectChatExperience({ project }: ProjectChatProps) {
       projectId: project.id,
       projectName: project.name,
       projectContext: project.context,
+      interfaceLanguage: locale,
     }),
-    [project.context, project.id, project.name],
+    [locale, project.context, project.id, project.name],
   );
 
   useAgentContext({
-    description:
-      "The active project and the only allowed knowledge context. Answer exclusively from this project context and its retrieved sources. Never add facts from general model knowledge or external sources. If the project does not contain enough information, say so clearly.",
+    description: dictionary.chat.agentInstructions,
     value: projectContext,
   });
 
@@ -106,7 +108,7 @@ function ProjectChatExperience({ project }: ProjectChatProps) {
           onClick={() => setKnowledgeOpen(true)}
         >
           <span aria-hidden="true">▤</span>
-          Knowledge
+          {dictionary.chat.knowledge}
         </button>
         <CopilotChat
           agentId="default"
@@ -116,8 +118,8 @@ function ProjectChatExperience({ project }: ProjectChatProps) {
           scrollView={{ className: "chat-scroll-region" }}
           throttleMs={0}
           labels={{
-            welcomeMessageText: `What would you like to work on in ${project.name}?`,
-            chatInputPlaceholder: "Message",
+            welcomeMessageText: `${dictionary.chat.welcomePrefix} ${project.name}?`,
+            chatInputPlaceholder: dictionary.chat.messagePlaceholder,
             chatDisclaimerText: "",
           }}
         />
