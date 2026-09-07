@@ -91,7 +91,8 @@ pass through a Vercel Function. Keep `XTTS_ALLOWED_ORIGINS` on the voice server
 limited to the deployed application origins. Temporary song files are removed
 after the converted result is downloaded, or automatically after six hours.
 On memory-constrained CPU hosts, XTTS and FreeVC run in separate short-lived
-processes so their model allocations are fully released between jobs.
+processes so their model allocations are fully released between jobs. FreeVC
+processes longer vocals in overlapping chunks to keep peak memory bounded.
 
 FreeVC and its Coqui model entry are MIT-licensed; Demucs is MIT-licensed. Voice
 conversion preserves the source timing and melody but is an approximation, and
